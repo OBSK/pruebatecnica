@@ -1,52 +1,43 @@
-import { NextFunction, Request, Response  } from "express";
-import { validateEmail } from "../utils/validateEmail.util";
-import { validateCreditCardNumber } from "../utils/validateCardNumber.util";
-import { validateCVV } from "../utils/validateCVV.util";
+import { Request, Response, NextFunction } from 'express';
+import { validateCVV } from "../validations/validateCVV";
+import { validateCreditCardNumber } from "../validations/validateCardNumber";
+import { validateEmail } from "../validations/validateEmail";
 import { ServerError } from "../errors/server.error";
 
-export default (req: Request, res: Response, next: NextFunction) => {
-    const CURRENT_YEAR = new Date().getFullYear();
-    if(req.body.card_number.length != 16 ) {
-        res.status(400).send({
-            error: "Invalid Card Number",
-        });
+export default async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const CURRENT_YEAR: number = new Date().getFullYear();
+
+    if (req.body.card_number.length !== 16) {
+        next(new ServerError(400, "Invalid Card Number Length"));
         return;
     }
 
-    if(!validateCVV(req.body.cvv)) {
-        res.status(400).send({
-            error: "Invalid CVV"
-        });
-        return;
-    }
-    
-    if(Number(req.body.expiration_month) == 0 && Number(req.body.expiration_month) > 12) {
-        res.status(400).send({
-            error: "Invalid Expiration Month"
-        });
+    if (!validateCVV(req.body.cvv)) {
+        next(new ServerError(400, "Invalid CVV"));
         return;
     }
 
-    if(req.body.expiration_year > CURRENT_YEAR + 5) {
-        res.status(400).send({
-            error: "Invalid Expiration Year"
-        });
+    const expirationMonth: number = Number(req.body.expiration_month);
+    if (expirationMonth === 0 || expirationMonth > 12) {
+        next(new ServerError(400, "Invalid Expiration Month"));
         return;
     }
 
-    if(!validateEmail(req.body.email)) {
-        res.status(400).send({
-            error: "Invalid Email"
-        });
+    const expirationYear: number = Number(req.body.expiration_year);
+    if (expirationYear > CURRENT_YEAR + 5) {
+        next(new ServerError(400, "Invalid Expiration Year"));
         return;
     }
 
-    if(!validateCreditCardNumber(req.body.card_number)) {
-        res.status(400).send({
-            error: "Invalid Credit Card Number"
-        });
+    if (!validateEmail(req.body.email)) {
+        next(new ServerError(400, "Invalid Email"));
         return;
     }
-    
+
+    if (!validateCreditCardNumber(req.body.card_number)) {
+        next(new ServerError(400, "Invalid Credit Card Number"));
+        return;
+    }
+
     next();
-} 
+};
