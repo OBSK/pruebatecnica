@@ -1,15 +1,16 @@
 import { createClient } from 'redis';
 
 export class CardRepository {
+
     async save(key: string, payload: any) {
         
     const client = await createClient()
     .on('error', err => console.log('Redis Client Error', err))
     .connect();
-
     await client.hSet("cards", key, JSON.stringify(payload));
-    
+    await client.expire(key, 60);
     }
+
     async getByToken(token: string) {
         const client = await createClient()
         .on('error', err => console.log('Redis Client Error', err))
@@ -19,6 +20,7 @@ export class CardRepository {
         if(!payload) {
             return null;
         }
+
         const card = JSON.parse(payload);
         return card;
     }
