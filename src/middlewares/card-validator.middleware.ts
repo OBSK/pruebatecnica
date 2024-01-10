@@ -2,6 +2,7 @@ import { NextFunction, Request, Response  } from "express";
 import { validateEmail } from "../utils/validateEmail.util";
 import { validateCreditCardNumber } from "../utils/validateCardNumber.util";
 import { validateCVV } from "../utils/validateCVV.util";
+import { ServerError } from "../errors/server.error";
 
 export default (req: Request, res: Response, next: NextFunction) => {
     const CURRENT_YEAR = new Date().getFullYear();
